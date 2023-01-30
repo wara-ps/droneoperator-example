@@ -1,0 +1,54 @@
+# Docker
+# Build a Docker image
+# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
+
+name : $(date:yyyyMMdd)_$(Build.BuildId)
+trigger:
+  branches:
+    include:
+      - master
+ 
+pool:
+  name: 'Default'
+ 
+variables:
+  ImageName: 'waraps-drone-operator:$(Build.BuildId)'
+
+stages:
+- stage: Build
+  displayName: Build image
+  jobs:  
+  - job: Build
+    displayName: Build and push Docker image
+    steps:
+    - task: Docker@1
+      displayName: 'Build the Docker image'
+      inputs:
+        containerregistrytype: 'Container Registry'
+        dockerRegistryEndpoint: 'warapsDockerRegistry'
+        command: 'Build an image'
+        dockerFile: '**/Dockerfile'
+        imageName: '$(ImageName)'
+        includeLatestTag: true
+        useDefaultContext: false
+        buildContext: '.'
+        envVars: Re
+
+
+     
+    - task: Docker@1
+      displayName: 'Push the Docker image to registry.waraps.org'
+      inputs:
+        containerregistrytype: 'Container Registry'
+        dockerRegistryEndpoint: 'warapsDockerRegistry'
+        command: 'Push an image'
+        imageName: '$(ImageName)'
+      condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    - task: Docker@1
+      displayName: 'Push the :latest image to registry.waraps.org'
+      inputs:
+        containerregistrytype: 'Container Registry'
+        dockerRegistryEndpoint: 'warapsDockerRegistry'
+        command: 'Push an image'
+        ImageName: 'waraps-drone-operator:latest'
+      condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))

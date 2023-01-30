@@ -1,0 +1,5 @@
+numpy
+paho-mqtt
+pyproj
+pyzmq
+Flask
